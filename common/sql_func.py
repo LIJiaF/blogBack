@@ -1,4 +1,9 @@
 import pymysql
+from config import mysqlConfig
+
+
+class MysqlError(Exception):
+    pass
 
 
 class MysqlManage(object):
@@ -11,43 +16,95 @@ class MysqlManage(object):
         try:
             self.cursor.execute(sql)
             result = self.cursor.fetchone()
-            self.close()
+            print('[SUCCESS] 获取一条数据 ', result, 'SQL ', sql)
+            self.__close()
         except Exception as e:
+            print('[ERROR] 获取一条数据失败 ', 'SQL ', sql)
             print(e)
 
         return result
 
     def get_all(self, sql):
-        list = ()
+        result = []
         try:
             self.cursor.execute(sql)
-            list = self.cursor.fetchall()
-            self.close()
+            result = self.cursor.fetchall()
+            print('[SUCCESS] 获取%n条数据 ' % len(result), result, 'SQL ', sql)
+            self.__close()
         except Exception as e:
+            print('[ERROR] 获取多条数据失败 ', 'SQL ', sql)
             print(e)
 
-        return list
+        return result
 
     def insert(self, sql):
-        return self.__edit(sql)
+        try:
+            count = self.__execute(sql)
+            print('[SUCCESS] 插入%n条记录 ' % count, sql)
+        except Exception as e:
+            print('[ERROR] 插入记录失败 ', sql)
+            print(e)
+
+        return count
 
     def update(self, sql):
-        return self.__edit(sql)
+        try:
+            count = self.__execute(sql)
+            print('[SUCCESS] 更新%n条记录 ' % count, sql)
+        except Exception as e:
+            print('[ERROR] 更新记录失败 ', sql)
+            print(e)
+
+        return count
 
     def delete(self, sql):
-        return self.__edit(sql)
+        try:
+            count = self.__execute(sql)
+            print('[SUCCESS] 删除%n条记录 ' % count, sql)
+        except Exception as e:
+            print('[ERROR] 删除记录失败 ', sql)
+            print(e)
 
-    def __edit(self, sql):
+        return count
+
+    def execute(self, sql):
+        try:
+            self.__execute(sql)
+            print('[SUCCESS] 执行sql语句成功 ', sql)
+        except Exception as e:
+            print('[ERROR] 执行sql语句失败 ', sql)
+            print(e)
+
+    def rollback(self):
+        self.__rollback()
+
+    def __execute(self, sql):
         count = 0
         try:
             count = self.cursor.execute(sql)
             self.conn.commit()
-            self.close()
+            self.__close()
         except Exception as e:
             print(e)
 
         return count
 
-    def close(self):
+    def __rollback(self):
+        print('sql语句执行失败，事务回滚')
+        self.conn.rollback()
+
+    def __close(self):
+        print('关闭游标，关闭连接')
         self.cursor.close()
         self.conn.close()
+
+
+if __name__ == '__main__':
+    insert_sql = 'insert into users (username, password) values("admin", "admin")'
+    update_sql = 'update users set password = "root" where id = 2'
+    delete_sql = 'delete from users where id = 1'
+
+    conn = MysqlManage(mysqlConfig)
+    print(conn.insert(insert_sql))
+    print(conn.update(update_sql))
+    print(conn.delete(delete_sql))

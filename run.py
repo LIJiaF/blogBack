@@ -1,12 +1,8 @@
 import tornado.web
 import tornado.ioloop
 
-from api import *
+from router import url
 from config import tornadoConfig
-
-url = [
-    (r"/login", LoginHandle),
-]
 
 
 def make_app(url, config):
@@ -17,3 +13,4 @@ def make_app(url, config):
 
 if __name__ == "__main__":
     make_app(url, tornadoConfig)
+    print('已启动')
