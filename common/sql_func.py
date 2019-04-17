@@ -1,100 +1,107 @@
 import pymysql
-from config import mysqlConfig
-
-
-class MysqlError(Exception):
-    pass
+from .sql_err import MysqlError
+from .log_print import logger
 
 
 class MysqlManage(object):
-    def __init__(self, config):
-        self.conn = pymysql.connect(**config)
+    def __init__(self, **config):
+        self.conn = None
+        self.cursor = None
+        self.db = config['db']
+        self.host = config['host']
+        self.user = config['user']
+        self.password = config['password']
+        self.port = config['port']
+        self.charset = config['charset']
+
+    def connect(self):
+        self.conn = pymysql.connect(db=self.db, host=self.host, user=self.user, password=self.password, port=self.port)
         self.cursor = self.conn.cursor()
 
     def get_one(self, sql):
         result = None
         try:
+            self.connect()
             self.cursor.execute(sql)
             result = self.cursor.fetchone()
-            print('[SUCCESS] 获取一条数据 ', result, 'SQL ', sql)
-            self.__close()
+            logger.info('[SUCCESS] 获取一条数据 %s' % sql)
+        except MysqlError as e:
+            logger.info('[ERROR] 获取数据失败 %s' % sql)
+            raise MysqlError()
         except Exception as e:
-            print('[ERROR] 获取一条数据失败 ', 'SQL ', sql)
-            print(e)
+            logger.info('[ERROR] 获取数据失败 %s' % sql)
+            raise MysqlError()
+        finally:
+            self.close()
 
         return result
 
     def get_all(self, sql):
         result = []
         try:
+            self.connect()
             self.cursor.execute(sql)
             result = self.cursor.fetchall()
-            print('[SUCCESS] 获取%n条数据 ' % len(result), result, 'SQL ', sql)
-            self.__close()
+            logger.info('[SUCCESS] 获取 %d 条数据 %s' % (len(result), sql))
+        except MysqlError as e:
+            logger.info('[ERROR] 获取数据失败 %s' % sql)
+            raise MysqlError()
         except Exception as e:
-            print('[ERROR] 获取多条数据失败 ', 'SQL ', sql)
-            print(e)
+            logger.info('[ERROR] 获取数据失败 %s' % sql)
+            raise MysqlError()
+        finally:
+            self.close()
 
         return result
 
     def insert(self, sql):
         try:
-            count = self.__execute(sql)
-            print('[SUCCESS] 插入%n条记录 ' % count, sql)
-        except Exception as e:
-            print('[ERROR] 插入记录失败 ', sql)
-            print(e)
+            count = self.execute(sql)
+        except MysqlError as e:
+            raise MysqlError()
 
         return count
 
     def update(self, sql):
         try:
-            count = self.__execute(sql)
-            print('[SUCCESS] 更新%n条记录 ' % count, sql)
-        except Exception as e:
-            print('[ERROR] 更新记录失败 ', sql)
-            print(e)
+            count = self.execute(sql)
+        except MysqlError as e:
+            raise MysqlError()
 
         return count
 
     def delete(self, sql):
         try:
-            count = self.__execute(sql)
-            print('[SUCCESS] 删除%n条记录 ' % count, sql)
-        except Exception as e:
-            print('[ERROR] 删除记录失败 ', sql)
-            print(e)
+            count = self.execute(sql)
+        except MysqlError as e:
+            raise MysqlError()
 
         return count
 
     def execute(self, sql):
         try:
-            self.__execute(sql)
-            print('[SUCCESS] 执行sql语句成功 ', sql)
-        except Exception as e:
-            print('[ERROR] 执行sql语句失败 ', sql)
-            print(e)
-
-    def rollback(self):
-        self.__rollback()
-
-    def __execute(self, sql):
-        count = 0
-        try:
+            self.connect()
             count = self.cursor.execute(sql)
             self.conn.commit()
-            self.__close()
+            print('[SUCCESS] 执行sql语句成功 ', sql)
+        except MysqlError as e:
+            self.rollback()
+            print('[ERROR] 执行sql语句失败 ', sql)
+            raise MysqlError()
         except Exception as e:
-            print(e)
+            self.rollback()
+            print('[ERROR] 执行sql语句失败 ', sql)
+            raise MysqlError()
+        finally:
+            self.close()
 
         return count
 
-    def __rollback(self):
-        print('sql语句执行失败，事务回滚')
+    def rollback(self):
+        print('[ERROR] sql语句执行失败，事务回滚')
         self.conn.rollback()
 
-    def __close(self):
-        print('关闭游标，关闭连接')
+    def close(self):
         self.cursor.close()
         self.conn.close()
 

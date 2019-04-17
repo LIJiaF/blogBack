@@ -13,4 +13,3 @@ def make_app(url, config):
 
 if __name__ == "__main__":
     make_app(url, tornadoConfig)
-    print('已启动')
