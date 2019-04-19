@@ -1,7 +1,6 @@
 import tornado.web
 
-from common import db, MysqlError, FiledsError, logger
-from publit_func import FiledsCheck
+from common import db, MysqlError, FiledsError, logger, FiledsCheck
 
 
 def check(username, password):
