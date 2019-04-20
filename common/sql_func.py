@@ -1,5 +1,6 @@
 import pymysql
-from .sql_err import MysqlError
+from config import mysqlConfig
+from .err_func import MysqlError
 from .log_print import logger
 
 
