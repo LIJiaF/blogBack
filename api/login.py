@@ -54,7 +54,7 @@ class RegisterHandle(tornado.web.RequestHandler):
         sql = 'select id from users where username = "%s"' % (username)
         data = db.get_one(sql)
         if data:
-            logger.info('[ERROR] 用户名已存在')
+            logger.info('[ERROR] %s 用户名已存在' % username)
             res['msg'] = '用户名已存在!'
         else:
             try:
@@ -64,7 +64,7 @@ class RegisterHandle(tornado.web.RequestHandler):
                     logger.info('[SUCCESS] 注册成功')
                     res['msg'] = '注册成功!'
             except MysqlError as e:
-                logger.error('[ERROR] 注册成功')
+                logger.error('[ERROR] 注册失败')
                 res['msg'] = '注册失败，请重新注册!'
                 print(e)
 

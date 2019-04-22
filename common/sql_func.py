@@ -1,7 +1,9 @@
 import pymysql
+from pymysql.cursors import DictCursor
+
 from config import mysqlConfig
-from .err_func import MysqlError
-from .log_print import logger
+from common.err_func import MysqlError
+from common.log_print import logger
 
 
 class MysqlManage(object):
@@ -14,9 +16,11 @@ class MysqlManage(object):
         self.password = config['password']
         self.port = config['port']
         self.charset = config['charset']
+        self.cursorClass = DictCursor
 
     def connect(self):
-        self.conn = pymysql.connect(db=self.db, host=self.host, user=self.user, password=self.password, port=self.port)
+        self.conn = pymysql.connect(db=self.db, host=self.host, user=self.user, password=self.password, port=self.port,
+                                    cursorclass=self.cursorClass)
         self.cursor = self.conn.cursor()
 
     def get_one(self, sql):
@@ -108,11 +112,13 @@ class MysqlManage(object):
 
 
 if __name__ == '__main__':
+    select_sql = 'select * from users'
     insert_sql = 'insert into users (username, password) values("admin", "admin")'
     update_sql = 'update users set password = "root" where id = 2'
     delete_sql = 'delete from users where id = 1'
 
-    conn = MysqlManage(mysqlConfig)
-    print(conn.insert(insert_sql))
-    print(conn.update(update_sql))
-    print(conn.delete(delete_sql))
+    conn = MysqlManage(**mysqlConfig)
+    print(conn.get_all(select_sql))
+    # print(conn.insert(insert_sql))
+    # print(conn.update(update_sql))
+    # print(conn.delete(delete_sql))
