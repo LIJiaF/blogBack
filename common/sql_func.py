@@ -8,6 +8,8 @@ from common.err_func import MysqlError
 
 
 class MysqlPool(object):
+    __slots__ = ('config', 'min_conn', 'max_conn', 'pool')
+
     def __init__(self, **config):
         self.config = config
         self.min_conn = config.get('min_conn', 2)
@@ -34,6 +36,8 @@ class MysqlPool(object):
 
 
 class MysqlManage(object):
+    __slots__ = ('pool',)
+
     _instance_lock = threading.Lock()
 
     # 实现单例模式
