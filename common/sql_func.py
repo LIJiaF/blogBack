@@ -1,68 +1,104 @@
 import pymysql
+import queue
+import threading
 from pymysql.cursors import DictCursor
 
 from config import mysqlConfig
 from common.err_func import MysqlError
-from common.log_print import logger
+
+
+class MysqlPool(object):
+    def __init__(self, **config):
+        self.config = config
+        self.min_conn = config.get('min_conn', 2)
+        self.max_conn = config.get('max_conn', 10)
+        self.pool = queue.Queue(self.max_conn)
+
+    def __connection(self):
+        return pymysql.connect(**self.config)
+
+    def get_conn(self):
+        if not self.pool.empty():
+            return self.pool.get()
+        self.create_conn()
+        return self.pool.get()
+
+    def create_conn(self):
+        self.pool.put(self.__connection())
+
+    def close_conn(self, conn):
+        if self.pool.qsize() < self.max_conn:
+            self.pool.put(conn)
+        else:
+            conn.close()
 
 
 class MysqlManage(object):
+    _instance_lock = threading.Lock()
+
+    # 实现单例模式
+    def __new__(cls, **kwargs):
+        if not hasattr(MysqlManage, "_instance"):
+            with MysqlManage._instance_lock:
+                if not hasattr(MysqlManage, "_instance"):
+                    MysqlManage._instance = object.__new__(cls)
+        return MysqlManage._instance
+
     def __init__(self, **config):
-        self.conn = None
-        self.cursor = None
-        self.db = config['db']
-        self.host = config['host']
-        self.user = config['user']
-        self.password = config['password']
-        self.port = config['port']
-        self.charset = config['charset']
-        self.cursorClass = DictCursor
+        self.pool = MysqlPool(**config, cursorclass=DictCursor)
 
-    def connect(self):
-        self.conn = pymysql.connect(db=self.db, host=self.host, user=self.user, password=self.password, port=self.port,
-                                    cursorclass=self.cursorClass)
-        self.cursor = self.conn.cursor()
+    def get_one(self, sql, param=None):
+        conn = self.pool.get_conn()
+        cursor = conn.cursor()
+        if param is None:
+            count = cursor.execute(sql)
+        else:
+            count = cursor.execute(sql, param)
 
-    def get_one(self, sql):
-        result = None
-        try:
-            self.connect()
-            self.cursor.execute(sql)
-            result = self.cursor.fetchone()
-            logger.info('[SUCCESS] 获取一条数据 %s' % sql)
-        except MysqlError as e:
-            logger.info('[ERROR] 获取数据失败 %s' % sql)
-            raise MysqlError()
-        except Exception as e:
-            logger.info('[ERROR] 获取数据失败 %s' % sql)
-            raise MysqlError()
-        finally:
-            self.close()
+        if count > 0:
+            result = cursor.fetchone()
+        else:
+            result = False
 
+        self.__close(cursor, conn)
         return result
 
-    def get_all(self, sql):
-        result = []
-        try:
-            self.connect()
-            self.cursor.execute(sql)
-            result = self.cursor.fetchall()
-            logger.info('[SUCCESS] 获取 %d 条数据 %s' % (len(result), sql))
-        except MysqlError as e:
-            logger.info('[ERROR] 获取数据失败 %s' % sql)
-            raise MysqlError()
-        except Exception as e:
-            logger.info('[ERROR] 获取数据失败 %s' % sql)
-            raise MysqlError()
-        finally:
-            self.close()
+    def get_all(self, sql, param=None):
+        conn = self.pool.get_conn()
+        cursor = conn.cursor()
+        if param is None:
+            count = cursor.execute(sql)
+        else:
+            count = cursor.execute(sql, param)
 
+        if count > 0:
+            result = cursor.fetchall()
+        else:
+            result = False
+
+        self.__close(cursor, conn)
+        return result
+
+    def get_many(self, sql, num, param=None):
+        conn = self.pool.get_conn()
+        cursor = conn.cursor()
+        if param is None:
+            count = cursor.execute(sql)
+        else:
+            count = cursor.execute(sql, param)
+
+        if count > 0:
+            result = cursor.fetchmany(num)
+        else:
+            result = False
+
+        self.__close(cursor, conn)
         return result
 
     def insert(self, sql):
         try:
             count = self.execute(sql)
-        except MysqlError as e:
+        except MysqlError:
             raise MysqlError()
 
         return count
@@ -70,7 +106,7 @@ class MysqlManage(object):
     def update(self, sql):
         try:
             count = self.execute(sql)
-        except MysqlError as e:
+        except MysqlError:
             raise MysqlError()
 
         return count
@@ -78,37 +114,31 @@ class MysqlManage(object):
     def delete(self, sql):
         try:
             count = self.execute(sql)
-        except MysqlError as e:
+        except MysqlError:
             raise MysqlError()
 
         return count
 
     def execute(self, sql):
+        conn = self.pool.get_conn()
+        cursor = conn.cursor()
         try:
-            self.connect()
-            count = self.cursor.execute(sql)
-            self.conn.commit()
-            print('[SUCCESS] 执行sql语句成功 ', sql)
-        except MysqlError as e:
-            self.rollback()
-            print('[ERROR] 执行sql语句失败 ', sql)
+            count = cursor.execute(sql)
+            conn.commit()
+        except MysqlError:
+            conn.rollback()
             raise MysqlError()
-        except Exception as e:
-            self.rollback()
-            print('[ERROR] 执行sql语句失败 ', sql)
+        except Exception:
+            conn.rollback()
             raise MysqlError()
         finally:
-            self.close()
+            self.__close(cursor, conn)
 
         return count
 
-    def rollback(self):
-        print('[ERROR] sql语句执行失败，事务回滚')
-        self.conn.rollback()
-
-    def close(self):
-        self.cursor.close()
-        self.conn.close()
+    def __close(self, cursor, conn):
+        cursor.close()
+        self.pool.close_conn(conn)
 
 
 if __name__ == '__main__':
