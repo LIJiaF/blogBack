@@ -1,6 +1,8 @@
 import tornado.web
+import hashlib
 
 from common import db, MysqlError, FiledsError, logger, FiledsCheck
+from publit_func import encryption
 
 
 def check(username, password):
@@ -30,9 +32,13 @@ class LoginHandle(tornado.web.RequestHandler):
         if msg:
             return self.finish(msg)
 
-        if username == '123' and password == '123':
+        sql = 'select password from users where username = "%s"' % (username)
+        data = db.get_one(sql)
+        if encryption(password) == data.get('password'):
+            logger.info('[SUCCESS] %s 登录成功' % username)
             res['msg'] = '登录成功'
         else:
+            logger.info('[ERROR] 账号或密码错误')
             res['msg'] = '账号或密码错误'
 
         return self.finish(res)
@@ -51,20 +57,20 @@ class RegisterHandle(tornado.web.RequestHandler):
         if msg:
             return self.finish(msg)
 
-        sql = 'select id from users where username = "%s"' % (username)
+        sql = 'select username from users where username = "%s"' % (username)
         data = db.get_one(sql)
         if data:
             logger.info('[ERROR] %s 用户名已存在' % username)
             res['msg'] = '用户名已存在!'
         else:
             try:
-                sql = 'insert into users (username, password) values ("%s", "%s")' % (username, password)
+                sql = 'insert into users (username, password) values ("%s", "%s")' % (username, encryption(password))
                 count = db.insert(sql)
                 if count:
-                    logger.info('[SUCCESS] 注册成功')
+                    logger.info('[SUCCESS] %s 注册成功' % username)
                     res['msg'] = '注册成功!'
             except MysqlError as e:
-                logger.error('[ERROR] 注册失败')
+                logger.error('[ERROR] %s 注册失败' % username)
                 res['msg'] = '注册失败，请重新注册!'
                 print(e)
 

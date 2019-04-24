@@ -6,7 +6,7 @@ from common import FiledsError
 class FiledsCheck(object):
     __slots__ = ('__content', '__msg', '__level', '__min_length', '__max_length')
 
-    def __init__(self, content, msg, level=3, min_lenght=6, max_length=15):
+    def __init__(self, content, msg, level=3, min_lenght=5, max_length=15):
         self.__content = content
         self.__msg = msg
         self.__level = level

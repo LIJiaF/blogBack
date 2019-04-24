@@ -1,1 +1,1 @@
-
+from publit_func.encryption_func import encryption
