@@ -11,7 +11,7 @@ class FiledsCheck(object):
         self.__msg = msg
         self.__min_length = min_lenght
         self.__max_length = max_length
-        self.check()
+        # self.check()
 
     def check(self):
         func_list = list(filter(lambda x: re.match(r'^check_', x), dir(self)))
@@ -53,15 +53,15 @@ class FiledsCheck(object):
     __repr__ = __str__
 
 
-def check(content, **kwargs):
-    Check = FiledsCheck(content, **kwargs)
-    Check.check_null()
-    FiledsCheck(content, **kwargs).check_special()
-    FiledsCheck(content, **kwargs).check_length()
+def login_check(content, **kwargs):
+    fileds_check = FiledsCheck(content, **kwargs)
+    fileds_check.check_null()
+    fileds_check.check_special()
+    fileds_check.check_length()
 
 
 if __name__ == '__main__':
     try:
-        FiledsCheck('2123', '用户名')
+        login_check('', msg='用户名')
     except FiledsError as e:
         print(e)

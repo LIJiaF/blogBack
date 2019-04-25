@@ -1,13 +1,13 @@
 import tornado.web
 
-from common import db, MysqlError, FiledsError, logger, FiledsCheck
+from common import db, MysqlError, FiledsError, logger, login_check
 from publit_func import encryption
 
 
-def check(username, password):
+def make_check(username, password):
     try:
-        FiledsCheck(username, msg='用户名')
-        FiledsCheck(password, msg='密码')
+        login_check(username, msg='用户名')
+        login_check(password, msg='密码')
     except FiledsError as e:
         logger.info('[ERROR] %s' % e)
         return str(e)
@@ -27,13 +27,13 @@ class LoginHandle(tornado.web.RequestHandler):
             'code': 0,
         }
 
-        msg = check(username, password)
+        msg = make_check(username, password)
         if msg:
             return self.finish(msg)
 
         sql = 'select password from users where username = "%s"' % (username)
         data = db.get_one(sql)
-        if encryption(password) == data.get('password'):
+        if data and encryption(password) == data.get('password'):
             logger.info('[SUCCESS] %s 登录成功' % username)
             res['msg'] = '登录成功'
         else:
@@ -52,7 +52,7 @@ class RegisterHandle(tornado.web.RequestHandler):
             'code': 0,
         }
 
-        msg = check(username, password)
+        msg = make_check(username, password)
         if msg:
             return self.finish(msg)
 
