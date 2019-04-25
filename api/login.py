@@ -1,5 +1,4 @@
 import tornado.web
-import hashlib
 
 from common import db, MysqlError, FiledsError, logger, FiledsCheck
 from publit_func import encryption

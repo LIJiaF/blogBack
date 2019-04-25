@@ -4,15 +4,19 @@ from common import FiledsError
 
 
 class FiledsCheck(object):
-    __slots__ = ('__content', '__msg', '__level', '__min_length', '__max_length')
+    __slots__ = ('__content', '__msg', '__min_length', '__max_length')
 
-    def __init__(self, content, msg, level=3, min_lenght=5, max_length=15):
+    def __init__(self, content, msg='', min_lenght=5, max_length=15):
         self.__content = content
         self.__msg = msg
-        self.__level = level
         self.__min_length = min_lenght
         self.__max_length = max_length
         self.check()
+
+    def check(self):
+        func_list = list(filter(lambda x: re.match(r'^check_', x), dir(self)))
+        for f in func_list:
+            eval('self.' + f + '()')
 
     @property
     def content(self):
@@ -23,28 +27,12 @@ class FiledsCheck(object):
         return self.__msg
 
     @property
-    def level(self):
-        return self.__level
-
-    @property
     def min_lenght(self):
         return self.__min_length
 
     @property
     def max_length(self):
         return self.__max_length
-
-    def check(self):
-        level = self.__level
-        if level == 1:
-            self.check_null()
-        elif level == 2:
-            self.check_null()
-            self.check_length()
-        else:
-            self.check_null()
-            self.check_special()
-            self.check_length()
 
     def check_null(self):
         if not self.__content:
@@ -65,8 +53,15 @@ class FiledsCheck(object):
     __repr__ = __str__
 
 
+def check(content, **kwargs):
+    Check = FiledsCheck(content, **kwargs)
+    Check.check_null()
+    FiledsCheck(content, **kwargs).check_special()
+    FiledsCheck(content, **kwargs).check_length()
+
+
 if __name__ == '__main__':
     try:
-        check = FiledsCheck('212123', '用户名')
+        FiledsCheck('2123', '用户名')
     except FiledsError as e:
         print(e)
