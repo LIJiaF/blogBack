@@ -4,7 +4,7 @@ name        角色名字
 ROLE = """
 CREATE TABLE IF NOT EXISTS role(
     id INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(255),
+    name VARCHAR(15),
     UNIQUE INDEX role_name_uq_index(name ASC)
 )
 """
@@ -23,15 +23,15 @@ role_id     角色ID
 USERS = """
 CREATE TABLE IF NOT EXISTS users(
     id INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    email VARCHAR(255),
-    photo VARCHAR(255),
+    username VARCHAR(20) NOT NULL,
+    password VARCHAR(20) NOT NULL,
+    email VARCHAR(30),
+    photo VARCHAR(200),
     age INT(3),
     sex INT(2),
-    address VARCHAR(255),
-    summary VARCHAR(255),
-    role_id INT(11), 
+    address VARCHAR(30),
+    summary VARCHAR(30),
+    role_id INT(11),
     UNIQUE INDEX users_username_uq_index(username ASC),
     UNIQUE INDEX users_email_uq_index(email ASC),
     CONSTRAINT users_role_id_fk_index FOREIGN KEY (role_id) REFERENCES role(id) on delete cascade on update cascade
