@@ -9,7 +9,7 @@ def make_check(username, password):
         login_check(username, msg='用户名')
         login_check(password, msg='密码')
     except FiledsError as e:
-        logger.info('[ERROR] %s' % e)
+        logger.warning('[ERROR] %s' % e)
         return str(e)
     except Exception as e:
         logger.error('[ERROR] %s' % str(e))
@@ -37,7 +37,7 @@ class LoginHandle(tornado.web.RequestHandler):
             logger.info('[SUCCESS] %s 登录成功' % username)
             res['msg'] = '登录成功'
         else:
-            logger.info('[ERROR] 账号或密码错误')
+            logger.warning('[ERROR] 账号或密码错误')
             res['msg'] = '账号或密码错误'
 
         return self.finish(res)
@@ -59,7 +59,7 @@ class RegisterHandle(tornado.web.RequestHandler):
         sql = 'select username from users where username = "%s"' % (username)
         data = db.get_one(sql)
         if data:
-            logger.info('[ERROR] %s 用户名已存在' % username)
+            logger.warning('[ERROR] %s 用户名已存在' % username)
             res['msg'] = '用户名已存在!'
         else:
             try:
