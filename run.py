@@ -4,7 +4,7 @@ import tornado.options
 from tornado.options import define, options
 
 from router import url
-from config import tornadoConfig
+from config import TORNADO_CONFIG
 
 define("port", default=8888, help="run on the given port", type=int)
 
@@ -17,4 +17,4 @@ def make_app(url, config):
 
 
 if __name__ == "__main__":
-    make_app(url, tornadoConfig)
+    make_app(url, TORNADO_CONFIG)

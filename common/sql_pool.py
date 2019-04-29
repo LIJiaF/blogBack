@@ -2,7 +2,7 @@ import pymysql
 from pymysql.cursors import DictCursor
 from DBUtils.PooledDB import PooledDB
 
-from config import mysqlConfig
+from config import MYSQL_CONFIG
 from common.err_func import MysqlError
 from common.log_print import logger
 
@@ -118,7 +118,7 @@ class MysqlPool(object):
 if __name__ == '__main__':
     select_sql = 'select * from users'
 
-    mysql = MysqlPool(mysqlConfig)
+    mysql = MysqlPool(MYSQL_CONFIG)
     print(mysql.get_all(select_sql))
 
     mysql.dispose()

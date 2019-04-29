@@ -20,8 +20,8 @@ def make_check(username, password):
 
 class LoginHandle(tornado.web.RequestHandler):
     def post(self):
-        username = self.get_argument('username', None)
-        password = self.get_argument('password', None)
+        username = self.get_argument('username', '')
+        password = self.get_argument('password', '')
 
         res = {
             'code': 0,
@@ -48,8 +48,8 @@ class LoginHandle(tornado.web.RequestHandler):
 
 class RegisterHandle(tornado.web.RequestHandler):
     def post(self):
-        username = self.get_argument('username', None)
-        password = self.get_argument('password', None)
+        username = self.get_argument('username', '')
+        password = self.get_argument('password', '')
 
         res = {
             'code': 0,
@@ -79,5 +79,11 @@ class RegisterHandle(tornado.web.RequestHandler):
                 logger.error('[ERROR] %s 注册失败' % username)
                 res['code'] = 1
                 res['msg'] = '注册失败，请重新注册!'
+                print(e)
+            except Exception as e:
+                logger.error('[ERROR] %s 注册失败' % username)
+                res['code'] = 1
+                res['msg'] = '注册失败，请重新注册!'
+                print(e)
 
         return self.finish(res)

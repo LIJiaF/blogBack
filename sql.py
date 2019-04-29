@@ -59,8 +59,7 @@ photo       照片
 summary    描述
 author      作者
 create_time 创建时间
-read_num    阅读次数
-class_id    分类ID
+class_id    所属分类
 content     文章内容
 """
 ARTICLE = """
@@ -71,7 +70,6 @@ CREATE TABLE article(
     summary VARCHAR(200),
     author VARCHAR(30),
     create_time DATETIME NOT NULL,
-    read_num INT(11) NOT NULL DEFAULT 0,
     class_id INT(5) NOT NULL,
     CONSTRAINT article_class_id_fk_index FOREIGN KEY (class_id) REFERENCES article_class(id) on delete cascade on update cascade
 )

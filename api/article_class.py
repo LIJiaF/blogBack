@@ -7,16 +7,17 @@ from common import db, MysqlError
 
 class ArticleClassHandle(tornado.web.RequestHandler):
     def post(self):
-        name = self.get_argument('name', None)
+        name = self.get_argument('name', '')
 
         res = {
             'code': 0
         }
 
         try:
-            fileds_check = FiledsCheck(name, msg='分类名称', min_lenght=2, max_length=10)
-            fileds_check.check_null()
-            fileds_check.check_length()
+            name_check = FiledsCheck(name, msg='分类名称', min_lenght=2, max_length=10)
+            name_check.check_null()
+            name_check.check_length()
+
         except FiledsError as msg:
             res['code'] = 1
             res['msg'] = str(msg)
@@ -31,9 +32,15 @@ class ArticleClassHandle(tornado.web.RequestHandler):
                 res['msg'] = '添加成功!'
             else:
                 raise MysqlError
-        except MysqlError:
+        except MysqlError as e:
             logger.error('[ERROR] %s 添加失败' % name)
             res['code'] = 1
             res['msg'] = '添加失败，请重新添加!'
+            print(e)
+        except Exception as e:
+            logger.error('[ERROR] %s 添加失败' % name)
+            res['code'] = 1
+            res['msg'] = '添加失败，请重新添加!'
+            print(e)
 
         return self.finish(res)

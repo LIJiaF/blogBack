@@ -3,7 +3,7 @@ import queue
 import threading
 from pymysql.cursors import DictCursor
 
-from config import mysqlConfig
+from config import MYSQL_CONFIG
 from common.err_func import MysqlError
 
 
@@ -99,42 +99,30 @@ class MysqlManage(object):
         self.__close(cursor, conn)
         return result
 
-    def insert(self, sql):
-        try:
-            count = self.execute(sql)
-        except MysqlError:
-            raise MysqlError()
-
+    def insert(self, sql, param=None):
+        count = self.execute(sql, param)
         return count
 
-    def update(self, sql):
-        try:
-            count = self.execute(sql)
-        except MysqlError:
-            raise MysqlError()
-
+    def update(self, sql, param=None):
+        count = self.execute(sql, param)
         return count
 
-    def delete(self, sql):
-        try:
-            count = self.execute(sql)
-        except MysqlError:
-            raise MysqlError()
-
+    def delete(self, sql, param=None):
+        count = self.execute(sql, param)
         return count
 
-    def execute(self, sql):
+    def execute(self, sql, param=None):
         conn = self.pool.get_conn()
         cursor = conn.cursor()
         try:
-            count = cursor.execute(sql)
+            count = cursor.execute(sql, param)
             conn.commit()
         except MysqlError:
             conn.rollback()
             raise MysqlError()
         except Exception:
             conn.rollback()
-            raise MysqlError()
+            raise
         finally:
             self.__close(cursor, conn)
 
@@ -151,7 +139,7 @@ if __name__ == '__main__':
     update_sql = 'update users set password = "root" where id = 2'
     delete_sql = 'delete from users where id = 1'
 
-    conn = MysqlManage(**mysqlConfig)
+    conn = MysqlManage(**MYSQL_CONFIG)
     print(conn.get_all(select_sql))
     # print(conn.insert(insert_sql))
     # print(conn.update(update_sql))
