@@ -46,6 +46,12 @@ role_id     角色ID
 """ 文章分类 article_class
 name        分类名称
 """
+ARTICLE_CLASS = """
+CREATE TABLE article_class(
+    id INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(30) NOT NULL
+)
+"""
 
 """ 文章
 title       标题
@@ -57,10 +63,31 @@ read_num    阅读次数
 class_id    分类ID
 content     文章内容
 """
+ARTICLE = """
+CREATE TABLE article(
+    id INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    title VARCHAR(30) NOT NULL,
+    photo VARCHAR(200),
+    summary VARCHAR(200),
+    author VARCHAR(30),
+    create_time DATETIME NOT NULL,
+    read_num INT(11) NOT NULL DEFAULT 0,
+    class_id INT(5) NOT NULL,
+    CONSTRAINT article_class_id_fk_index FOREIGN KEY (class_id) REFERENCES article_class(id) on delete cascade on update cascade
+)
+"""
 
 """ 文章标签 article_label
 name        标签名字
 article_id  文章ID
 """
+ARTICLE_LABEL = """
+CREATE TABLE article_label(
+    id INT(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(30) NOT NULL,
+    article_id INT(11) NOT NULL,
+    CONSTRAINT article_label_article_id_fk_index FOREIGN KEY (article_id) REFERENCES article(id) on delete cascade on update cascade
+)
+"""
 
-tables = [ROLE, USERS]
+tables = [ROLE, USERS, ARTICLE_CLASS, ARTICLE, ARTICLE_LABEL]

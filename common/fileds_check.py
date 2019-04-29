@@ -11,12 +11,6 @@ class FiledsCheck(object):
         self.__msg = msg
         self.__min_length = min_lenght
         self.__max_length = max_length
-        # self.check()
-
-    def check(self):
-        func_list = list(filter(lambda x: re.match(r'^check_', x), dir(self)))
-        for f in func_list:
-            eval('self.' + f + '()')
 
     @property
     def content(self):
