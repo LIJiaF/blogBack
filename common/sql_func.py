@@ -40,7 +40,6 @@ class MysqlManage(object):
 
     _instance_lock = threading.Lock()
 
-    # 实现单例模式
     def __new__(cls, **kwargs):
         if not hasattr(MysqlManage, "_instance"):
             with MysqlManage._instance_lock:
@@ -116,12 +115,9 @@ class MysqlManage(object):
         cursor = conn.cursor()
         try:
             count = cursor.execute(sql, param)
-            conn.commit()
         except MysqlError:
-            conn.rollback()
-            raise MysqlError()
+            raise MysqlError
         except Exception:
-            conn.rollback()
             raise
         finally:
             self.__close(cursor, conn)
